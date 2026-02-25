@@ -1,0 +1,38 @@
+import motbox_engine as engine
+from player_data import Database
+from games.turkish_meet import TurkishMeetGame
+from games.survival_999 import Survival999
+
+def run_motbox():
+    db = Database()
+    print("=== MOTBOX ENGINE V1.0 - LOADING SCENES ===")
+    
+    user = input("Kullanici Adi: ")
+    pw = input("Sifre: ")
+
+    if user in db.users and db.users[user]["password"] == pw:
+        print(f"Yetki Onaylandi: {db.users[user]['rank']}")
+        
+        print("\n--- OYUN SECIMI ---")
+        print("1. Turk Tanisma (Sosyal/RP)")
+        print("2. 999 Gece (Survival/Horror)")
+        print("3. Adopt Me Motbox (Pet/Trade)")
+        
+        secim = input("Hangi dunyaya girmek istersin?: ")
+        
+        if secim == "1":
+            game = TurkishMeetGame(owner_panel=True)
+            game.spawn_player(user)
+        elif secim == "2":
+            game = Survival999()
+            game.trigger_night_cycle()
+            
+        # UI Elemanlarini Yukle
+        engine.load_joystick()
+        engine.load_jump_button()
+    else:
+        print("Giris Reddedildi!")
+
+if __name__ == "__main__":
+    run_motbox()
+    
