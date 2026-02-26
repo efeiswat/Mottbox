@@ -976,56 +976,56 @@ function initLobbyBabylon(){
 // ============================================================
 function initPlayBabylon(gameId) {
   var canvas = document.getElementById("play-canvas");
-  if (!canvas || !window.BABYLON) return;
+  if (!canvas || !window.BABYLON) {
+    console.error("Babylon.js kütüphanesi veya Canvas bulunamadı!");
+    return;
+  }
+
+  if (playEng) { try { playEng.dispose(); } catch (e) {} playEng = null; }
   
-  if (playEng) { try { playEng.dispose(); } catch (e) { } playEng = null; }
   playEng = new BABYLON.Engine(canvas, true);
   var scene = new BABYLON.Scene(playEng);
 
-  // Gökyüzü ve Atmosfer
-  var skys = [[0.5, 0.78, 1], [0.02, 0.02, 0.1], [0.1, 0.05, 0.2]];
-  var sc = skys[gameId] || skys[0];
-  scene.clearColor = new BABYLON.Color4(sc[0], sc[1], sc[2], 1);
+  // 🌌 Arka Plan Rengi (Siyah olmasın diye açık mavi yapıyoruz)
+  scene.clearColor = new BABYLON.Color4(0.5, 0.8, 1, 1);
 
-  // Kamera ve Işık (Admin efeiswat için geniş açı)
-  var cam = new BABYLON.ArcRotateCamera("c", Math.PI, Math.PI / 3, 15, new BABYLON.Vector3(0, 2, 0), scene);
+  // 🎥 Kamera (Karakterin tepesinden bakar)
+  var cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/3, 15, new BABYLON.Vector3(0, 2, 0), scene);
   cam.attachControl(canvas, true);
-  var hemi = new BABYLON.HemisphericLight("h", new BABYLON.Vector3(0, 1, 0), scene);
-  hemi.intensity = 0.8;
 
-  // Zemin (Geniş Çimenlik Alan)
+  // 💡 Işık (Her yeri aydınlatır)
+  var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+  light.intensity = 0.9;
+
+  // 🌍 Zemin (Yeşil Çimenlik)
   var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 100, height: 100}, scene);
   var gMat = new BABYLON.StandardMaterial("gMat", scene);
-  gMat.diffuseColor = new BABYLON.Color3(0.2, 0.5, 0.2);
+  gMat.diffuseColor = new BABYLON.Color3(0.3, 0.7, 0.3); // Yeşil
   ground.material = gMat;
 
-  // --- HARİTA YÜKLEME SİSTEMİ ---
-  // Eğer Türk Tanışma (id=0) seçildiyse games/turkish_meet.js içindeki fonksiyonu çağırır
+  // ⛲ Türk Tanışma Haritası Yükleme
   if (gameId == 0) {
+    // Merkezi Çeşme (Eğer dosya yoksa bile burada oluşsun)
+    var fountain = BABYLON.MeshBuilder.CreateCylinder("fountain", {height: 1.5, diameter: 4}, scene);
+    fountain.position.y = 0.75;
+    var fMat = new BABYLON.StandardMaterial("fMat", scene);
+    fMat.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
+    fountain.material = fMat;
+
+    // games/turkish_meet.js yüklüyse ekstraları getir
     if (typeof initTurkishMeet === "function") {
       initTurkishMeet(scene);
-      console.log("Türk Tanışma Haritası ve Çeşme başarıyla yüklendi!");
-    } else {
-      console.error("Hata: games/turkish_meet.js dosyası bağlı değil!");
-      // Dosya yoksa bile bir çeşme oluştur ki oyun boş kalmasın
-      var f = BABYLON.MeshBuilder.CreateCylinder("f", {height: 2, diameter: 4}, scene);
-      f.position.y = 1;
     }
   }
 
-  // --- KARAKTER HAREKETLERİ ---
-  var isJump = false, jumpV = 0;
-  _jfn = function() { if (!isJump) { isJump = true; jumpV = 0.25; } };
-
+  // 🔄 Render Döngüsü (Siyah ekranı bitiren komut)
   playEng.runRenderLoop(function() {
-    if (isJump) {
-      // Zıplama Mantığı buraya eklenebilir
-    }
     scene.render();
   });
 
   window.addEventListener("resize", function() { if (playEng) playEng.resize(); });
 }
+
 
 
 // ============================================================
