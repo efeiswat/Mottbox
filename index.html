@@ -975,48 +975,52 @@ function initLobbyBabylon(){
 // GAMEPLAY BABYLON
 // ============================================================
 function initPlayBabylon(gameId) {
-  var canvas = document.getElementById("play-canvas");
-  if (!canvas || !window.BABYLON) {
-    console.error("Babylon.js kütüphanesi veya Canvas bulunamadı!");
-    return;
-  }
+    var canvas = document.getElementById("play-canvas");
+    if (!canvas || !window.BABYLON) return;
 
-  if (playEng) { try { playEng.dispose(); } catch (e) {} playEng = null; }
-  
-  playEng = new BABYLON.Engine(canvas, true);
-  var scene = new BABYLON.Scene(playEng);
+    // Eski motoru temizle
+    if (playEng) { try { playEng.dispose(); } catch (e) { } playEng = null; }
 
-  // 🌌 Arka Plan Rengi (Siyah olmasın diye açık mavi yapıyoruz)
-  scene.clearColor = new BABYLON.Color4(0.5, 0.8, 1, 1);
+    playEng = new BABYLON.Engine(canvas, true);
+    var scene = new BABYLON.Scene(playEng);
 
-  // 🎥 Kamera (Karakterin tepesinden bakar)
-  var cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/3, 15, new BABYLON.Vector3(0, 2, 0), scene);
-  cam.attachControl(canvas, true);
+    // 1. ARKA PLANI MAVİ YAP (Siyah ekranı bitirir)
+    scene.clearColor = new BABYLON.Color4(0.4, 0.6, 1, 1);
 
-  // 💡 Işık (Her yeri aydınlatır)
-  var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-  light.intensity = 0.9;
+    // 2. IŞIK EKLE (Işık olmazsa her şey siyah görünür)
+    var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+    light.intensity = 1.0;
 
-  // 🌍 Zemin (Yeşil Çimenlik)
-  var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 100, height: 100}, scene);
-  var gMat = new BABYLON.StandardMaterial("gMat", scene);
-  gMat.diffuseColor = new BABYLON.Color3(0.3, 0.7, 0.3); // Yeşil
-  ground.material = gMat;
+    // 3. KAMERA AYARI
+    var cam = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 2, Math.PI / 3, 10, BABYLON.Vector3.Zero(), scene);
+    cam.attachControl(canvas, true);
 
-  // ⛲ Türk Tanışma Haritası Yükleme
-  if (gameId == 0) {
-    // Merkezi Çeşme (Eğer dosya yoksa bile burada oluşsun)
-    var fountain = BABYLON.MeshBuilder.CreateCylinder("fountain", {height: 1.5, diameter: 4}, scene);
-    fountain.position.y = 0.75;
-    var fMat = new BABYLON.StandardMaterial("fMat", scene);
-    fMat.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
-    fountain.material = fMat;
+    // 4. GARANTİ ZEMİN (Beyaz bir zemin oluşturur)
+    var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 50, height: 50}, scene);
+    var gMat = new BABYLON.StandardMaterial("gMat", scene);
+    gMat.diffuseColor = new BABYLON.Color3(1, 1, 1); // Beyaz zemin
+    ground.material = gMat;
 
-    // games/turkish_meet.js yüklüyse ekstraları getir
-    if (typeof initTurkishMeet === "function") {
-      initTurkishMeet(scene);
+    // 5. TANISMA OYUNU İÇİN ÇEŞME
+    if (gameId == 0) {
+        var fountain = BABYLON.MeshBuilder.CreateCylinder("fountain", {height: 2, diameter: 3}, scene);
+        fountain.position.y = 1;
+        var fMat = new BABYLON.StandardMaterial("fMat", scene);
+        fMat.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+        fountain.material = fMat;
+        
+        // Dış dosyayı çağırmayı dene (Hata verirse oyunu bozmaz)
+        try { if(typeof initTurkishMeet === "function") initTurkishMeet(scene); } catch(e) {}
     }
-  }
+
+    // OYUNU BAŞLAT
+    playEng.runRenderLoop(function () {
+        scene.render();
+    });
+
+    window.addEventListener("resize", function () { if (playEng) playEng.resize(); });
+}
+
 
   // 🔄 Render Döngüsü (Siyah ekranı bitiren komut)
   playEng.runRenderLoop(function() {
